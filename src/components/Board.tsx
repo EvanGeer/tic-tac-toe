@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useState } from 'react';
 import './board.css'
 import { Square } from './Square';
@@ -12,12 +12,24 @@ export function Board() {
 
     const [gameState, setGameState] = useState<tileState[]>(tileArray)
     const [turn, setTurn] = useState('O');
+    const [computerPlayer, setComputerPlayer] = useState('X');
 
+    function executeComputerTurn() {
+        const availableTiles = gameState.filter(x => x.value === '').map(x => x.id);
+        console.log(`Available tiles: ${availableTiles}`);
+        const randomIndex = Math.round(Math.random() * availableTiles.length);
+        console.log(`Computer chooses: ${availableTiles[randomIndex]}`);
+        playSquare(availableTiles[randomIndex]);
+    }
+
+    useEffect(() => {
+        if(turn === computerPlayer) executeComputerTurn();
+    },[turn])
 
     function hasWinner() {
         return gameState.some(x => x.win);
     }
-    
+
     const playSquare = (id: number) => {
         if(hasWinner()) return gameState[id].value; // game is over
         console.log(`Clicked id: ${id ?? 'null'}`)
@@ -91,7 +103,7 @@ export function Board() {
 
     function getTiles() {
         const tiles = gameState?.map(x =>
-            <Square key={x.id} id={x.id} playSquare={playSquare} gameState={gameState} />
+            <Square key={x.id} id={x.id} value={gameState[x.id].value} playSquare={playSquare} gameState={gameState} />
         )
 
         return tiles;

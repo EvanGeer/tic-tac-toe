@@ -17,6 +17,6 @@ export function Square(props: squareProps) {
     };
 
     return (
-        <div id={id?.toString()} className={`tile ${(gameState[id].win) ? 'win' : ''}`} onClick={handleClick}>{playValue}</div>
+        <div id={id?.toString()} className={`tile ${(gameState[id].win) ? 'win' : ''}`} onClick={handleClick}>{props.value}</div>
     );
 }
