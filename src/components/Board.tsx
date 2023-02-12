@@ -1,126 +1,101 @@
-import React, { useEffect } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './board.css'
-import { Square } from './Square';
-import { tileState } from './tileState';
+import { Tile } from './Tile';
+import { TileState } from '../types/TileState';
+import { Game } from '../businessLogic/Game';
+import { ComputerPlayer } from '../businessLogic/ComputerPlayer';
+import { PlayerSprite } from '../types/PlayerSprite';
 
 
 export function Board() {
-    const tileArray = Array.from([...Array(9)]).map((x,i) => {
-        return {id:i, value:''}
+    const emptyGameState = Array.from([...Array(9)]).map((x, i) => {
+        return { id: i, value: '' }
     });
 
-    const [gameState, setGameState] = useState<tileState[]>(tileArray)
-    const [turn, setTurn] = useState('O');
-    const [computerPlayer, setComputerPlayer] = useState('X');
+    const [gameState, setGameState] = useState<TileState[]>(emptyGameState)
+    const [turn, setTurn] = useState(PlayerSprite.O);
+    const [winner, setWinner] = useState<PlayerSprite>();
+    const [tie, setTie] = useState(false);
 
-    function executeComputerTurn() {
-        const availableTiles = gameState.filter(x => x.value === '').map(x => x.id);
-        console.log(`Available tiles: ${availableTiles}`);
-        const randomIndex = Math.round(Math.random() * availableTiles.length);
-        console.log(`Computer chooses: ${availableTiles[randomIndex]}`);
-        playSquare(availableTiles[randomIndex]);
-    }
+    const [computerPlayer, setComputerPlayer] = useState();
 
     useEffect(() => {
-        if(turn === computerPlayer) executeComputerTurn();
-    },[turn])
+        executeComputerPlayerTurn();
+    }, [turn, computerPlayer, winner, tie])
 
-    function hasWinner() {
-        return gameState.some(x => x.win);
-    }
+    useEffect(() => {
+        setTie(Game.allTilesPlayed(gameState))
+    }, [gameState])
 
-    const playSquare = (id: number) => {
-        if(hasWinner()) return gameState[id].value; // game is over
-        console.log(`Clicked id: ${id ?? 'null'}`)
+    function executeComputerPlayerTurn() {
+        if (!winner && !tie && turn === computerPlayer) {
+            const computerPlay = ComputerPlayer.getPlay(gameState, turn);
+            playSquare(computerPlay);
+        }
+    }        
 
-        // increment player
+    const playSquare = (clickedTileId: number) => {
+        if (winner || tie) return gameState[clickedTileId].value; // game is over
+
+        console.log(`Clicked id: ${clickedTileId ?? 'null'}`)
         console.log(`Current Player: ${turn}`)
-        const currentPlayer = turn;
-        const nextPlayer = currentPlayer === 'O' ? 'X' : 'O';
-        
+        const newGameState = Game.getNewGameState(clickedTileId, turn, gameState);
 
-        const newGameValue = {id, value: currentPlayer};
-        const newGameState = [...gameState];
-        newGameState[id] = newGameValue;
-        
         // check for winner
-        const newWinner = checkForWinner(id, newGameState);
+        const newWinner = Game.checkForWinner(clickedTileId, newGameState, turn);
         console.log(`winner: ${newWinner ?? 'none'}`)
-        if(newWinner) newWinner.forEach(x => newGameState[x.id].win = true);
+        if (newWinner) {
+            newWinner.forEach(x => newGameState[x.id].win = true);
+            setWinner(turn);
+        }
 
         // update game state
         setGameState(newGameState);
         console.log(newGameState);
-        
-        if(!newWinner) setTurn(nextPlayer); // this ensures that the proper winner is displayed
+
+        // increment player        
+        const currentPlayer = turn;
+        const nextPlayer = PlayerSprite.next(turn);
+        setTurn(nextPlayer);
         return currentPlayer;
     }
 
-    const checkRow = (tileIndex: number, newGameState: tileState[], val: string) => {
-        const rowIndex = Math.floor(tileIndex/3);
-        const start = rowIndex*3;
-        const end = (rowIndex*3+3);
-        const row = newGameState.slice(start, end);
-        const rowVals = row.map(x => x.value);
-        console.log(`Row ${rowIndex}: ${rowVals}`);
-        if(rowVals.every(x => x === val))
-        {
-            console.log('winner!')
-            console.log(rowVals);
-            return row;
-        }
-        
-    } 
-    const checkCol = (tileIndex: number, newGameState: tileState[], val: string) => {
-        const colIndex = tileIndex % 3;
-        const colVals = [...Array(3)].map((x,i) => newGameState[(i*3)+colIndex])
-        if(colVals.every(x => x.value === val)) return colVals;
-    } 
-    const checkDiag = (tileIndex: number, newGameState: tileState[], val: string) => {
-        if(tileIndex % 2 !== 0) return; // all the diagonals are even :)
-        const diag1Cells = [0,4,8];
-        const diag1Vals = diag1Cells.map((i) => newGameState[i]);
-        if(diag1Vals.every(x => x.value === val)) return diag1Vals;
-        
-        const diag2Cells = [2,4,6];
-        const diag2Vals = diag2Cells.map((i) => newGameState[i])
-        if(diag2Vals.every(x => x.value === val)) return diag2Vals;
-    } 
-
-
-    const checkForWinner = (tileIndex: number, newGameState:any) => {
-
-        const val = newGameState[tileIndex];
-
-        const winConditions = [checkRow, checkCol, checkDiag];
-
-        const winner = winConditions
-            .map(x => x(tileIndex, newGameState, turn))
-            .find(x => x);
-        if (winner?.length ?? -1 > 0) return winner;
+    const handleComputerPlayerChange = (e: any) => {
+        setComputerPlayer(e.target.value);
     }
 
-    function getTiles() {
-        const tiles = gameState?.map(x =>
-            <Square key={x.id} id={x.id} value={gameState[x.id].value} playSquare={playSquare} gameState={gameState} />
-        )
+    const tiles = gameState?.map(x =>
+        <Tile key={x.id} id={x.id} value={gameState[x.id].value} playSquare={playSquare} gameState={gameState} />
+    );
 
-        return tiles;
+    const resetGame = () => {
+        setGameState(emptyGameState);
+        setWinner(undefined);
+        setTie(false);
     }
 
     return (
         <>
-        <h2>{hasWinner() 
-            ? (<>{turn} Wins!</>)
-            : <>{turn}'s turn</>
+            <h2>{
+                winner  ? <>{winner} Wins!</>
+                : tie   ? <>Cat's Game...</>
+                : <>{turn}'s turn</>
             }
             </h2>
+            <small>Computer Player: <select 
+                value={computerPlayer} onChange={handleComputerPlayerChange}>
+                <option value={'none'}>None</option>
+                <option value={PlayerSprite.O}>{PlayerSprite.O}</option>
+                <option value={PlayerSprite.X}>{PlayerSprite.X}</option>
+            </select>
+            </small>            
             <div className='board'>
-                {getTiles()}
-
+                {tiles}
             </div>
-            {/* <button onClick={resetBoard}>New Game</button> */}
+            <button onClick={resetGame} className={(winner || tie) ? 'white-border' : ''}>New Game</button>            
+
         </>
     )
 }
+
+
