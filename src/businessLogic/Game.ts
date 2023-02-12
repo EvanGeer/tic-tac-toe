@@ -9,7 +9,7 @@ export namespace Game {
         return newGameState;
     }
 
-    export const checkForWinner = (tileIndex: number, newGameState: any, turn: PlayerSprite) => {
+    export const checkForWin = (tileIndex: number, newGameState: any, turn: PlayerSprite) => {
 
         const val = newGameState[tileIndex];
 
@@ -76,6 +76,7 @@ const checkCol = (tileIndex: number, newGameState: TileState[], val: string) => 
     const colVals = [...Array(3)].map((x, i) => newGameState[(i * 3) + colIndex])
     if (colVals.every(x => x?.value === val)) return colVals;
 }
+
 const checkDiag = (tileIndex: number, newGameState: TileState[], val: string) => {
     if (tileIndex % 2 !== 0) return; // all the diagonals are even :)
     const diag1Cells = [0, 4, 8];

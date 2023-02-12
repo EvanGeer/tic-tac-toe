@@ -42,7 +42,7 @@ export function Board() {
         const newGameState = Game.getNewGameState(clickedTileId, turn, gameState);
 
         // check for winner
-        const newWinner = Game.checkForWinner(clickedTileId, newGameState, turn);
+        const newWinner = Game.checkForWin(clickedTileId, newGameState, turn);
         console.log(`winner: ${newWinner ?? 'none'}`)
         if (newWinner) {
             newWinner.forEach(x => newGameState[x.id].win = true);
