@@ -17,7 +17,7 @@ export function Board() {
     const [winner, setWinner] = useState<PlayerSprite>();
     const [tie, setTie] = useState(false);
 
-    const [computerPlayer, setComputerPlayer] = useState();
+    const [computerPlayer, setComputerPlayer] = useState(PlayerSprite.X);
 
     useEffect(() => {
         executeComputerPlayerTurn();
