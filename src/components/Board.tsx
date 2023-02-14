@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import './board.css'
 import { Tile } from './Tile';
 import { TileState } from '../types/TileState';
-import { Game } from '../businessLogic/Game';
-import { ComputerPlayer } from '../businessLogic/ComputerPlayer';
+import { Game } from '../logic/Game';
+import { ComputerPlayer } from '../logic/ComputerPlayer';
 import { PlayerSprite } from '../types/PlayerSprite';
 
 
